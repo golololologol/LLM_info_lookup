@@ -1,6 +1,6 @@
 # LLM_info_lookup
 
-A straightforward Gradio interface to retrieve key information about PyTorch LLM models.
+A straightforward Gradio interface to retrieve key information about PyTorch LLMs.
 
 ## Features
 
