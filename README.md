@@ -7,6 +7,12 @@ A straightforward Gradio interface to retrieve key information about PyTorch LLM
 - Fetches model information including vocabulary, prompt format, and SHA checksum of the tokenizer.
 - Saves model query history to avoid repetitive lookups.
 
+## Installation
+
+1. Clone this repository.
+2. Install the requirements using `pip install -r requirements.txt`.
+3. Now you're all set to use it.
+
 ## How to Use
 
 1. Run the script.
@@ -17,12 +23,6 @@ A straightforward Gradio interface to retrieve key information about PyTorch LLM
 ## UI
 
 ![image](https://github.com/golololologol/LLM_info_lookup/assets/50058139/43970919-763e-46fb-a9cc-1868f762d12d)
-
-## Installation
-
-1. Clone this repository.
-2. Install the requirements using `pip install -r requirements.txt`.
-3. Now you're all set to use it.
 
 ## Contributions
 
