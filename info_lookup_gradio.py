@@ -43,7 +43,8 @@ def get_vocab_family(tokenizer=None, model_path="") -> str:
         "20c2a98cfdd0ae39798458b5a6dc4838d1b700a0ec074525654a57bfa3088648": "gemma",
         "4088308e46cd5596c6c320bd102e48ee33b03d42d12447ccce8beafe4310bfa3": "yi",
         "2e7d13c6f9a9825b1dfeb645fe3130b118e4c119bdf0460be06bd7e2d7660728": "deepseek",
-        "62947c306f3a11187ba2a4a6ea25de91ce30c5724e6b647a1d6f0f8868217ead": "deepseek_1.5"
+        "62947c306f3a11187ba2a4a6ea25de91ce30c5724e6b647a1d6f0f8868217ead": "deepseek_1.5",
+        "0d35d803249ab1f34c99f8a10a562fc433134cca4fbd566dcd6ca61c4a857b04": "T5"
     }
 
     vocab_family = sha_to_family.get(tokenizer_sha, "Unknown") # type: ignore
