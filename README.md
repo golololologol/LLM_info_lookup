@@ -16,7 +16,7 @@ A straightforward Gradio interface to retrieve key information about PyTorch LLM
 
 ## UI
 
-![image](https://github.com/golololologol/LLM_info_lookup/assets/50058139/bb9b03f2-cca8-471c-8ef6-c7ec3f1bc03e)
+![image](https://github.com/golololologol/LLM_info_lookup/assets/50058139/43970919-763e-46fb-a9cc-1868f762d12d)
 
 ## Installation
 
