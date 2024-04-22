@@ -167,9 +167,9 @@ def find_model_info(model_input):
     return ('\n' + '-' * 130 + '\n').join(results), history_display
 
 with gr.Blocks() as demo:
-    with gr.Row():
+    with gr.Row(variant="panel"):
         model_input = gr.Textbox(label="Model Name", show_label=True, placeholder="author/model_name", info="Accepts author/model, and full URLs to model repos, e.g. huggingface.co/author/model")
-        submit_button = gr.Button(value="Retrieve Model Info")
+        submit_button = gr.Button(value="Retrieve Model Info", scale=0.955)
     with gr.Row():
         model_info_output = gr.Textbox(label="Model Information", interactive=False)
         model_history_output = gr.Textbox(label="Model History", interactive=False, value=update_history_display())
