@@ -1,0 +1,4 @@
+gradio
+json
+transformers
+hashlib
