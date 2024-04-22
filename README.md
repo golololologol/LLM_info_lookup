@@ -9,8 +9,10 @@ A straightforward Gradio interface to retrieve key information about PyTorch LLM
 
 ## How to Use
 
-1. Enter the address to the model in the textbox.
-2. Click "Retrieve Model Info" to get the model details.
+1. Run the script.
+2. Go to `http://127.0.0.1:7860` in your browser.
+3. Enter the address to the model in the textbox.
+4. Click "Retrieve Model Info", and enjoy knowing what the hell that one new model is.
 
 ## UI
 
@@ -20,7 +22,7 @@ A straightforward Gradio interface to retrieve key information about PyTorch LLM
 
 1. Clone this repository.
 2. Install the requirements using `pip install -r requirements.txt`.
-3. Run the script and enjoy knowing what the hell that one new model is.
+3. Now you're all set to use it.
 
 ## Contributions
 
