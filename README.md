@@ -4,8 +4,10 @@ A straightforward Gradio interface to retrieve key information about PyTorch LLM
 
 ## Features
 
-- Fetches model information including vocabulary, prompt format, and SHA checksum of the tokenizer.
-- Saves model query history to avoid repetitive lookups.
+- Retrieves and displays model vocab information including special tokens.
+- Shows vocabulary family for a range of known tokenizer SHA signatures.
+- Provides functionality to use local cache for faster access.
+- Customizable model retrieval using branches.
 
 ## Installation
 
@@ -22,7 +24,7 @@ A straightforward Gradio interface to retrieve key information about PyTorch LLM
 
 ## UI
 
-![image](https://github.com/golololologol/LLM_info_lookup/assets/50058139/43970919-763e-46fb-a9cc-1868f762d12d)
+![image](https://github.com/golololologol/LLM_info_lookup/assets/50058139/77d114ff-40a3-460c-9515-1d3cce9da258)
 
 ## Contributions
 
