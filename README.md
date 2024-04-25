@@ -32,8 +32,10 @@ A straightforward Gradio interface to retrieve key information about PyTorch LLM
 - model_creator/model_name (branch)
 
 Or stick the whole URL in there if you’re lazy:
-- https://huggingface.co/model_creator/model_name (will default to main as branch)
+- https://huggingface.co/model_creator/model_name
 - https://huggingface.co/model_creator/model_name/tree/branch
+
+(Not specifying a branch will default to main)
 
 ## Contributions
 
