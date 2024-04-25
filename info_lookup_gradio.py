@@ -126,7 +126,8 @@ def get_vocab_info(request, branch="main", show_special_tokens=False, use_local_
         }
 
         model_history[model_key] = vocab_info
-        save_history()
+        if use_local_cache:
+            save_history()
     except Exception as e:
         vocab_info = {"error": str(e)}
     
