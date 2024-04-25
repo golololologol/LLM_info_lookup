@@ -26,6 +26,15 @@ A straightforward Gradio interface to retrieve key information about PyTorch LLM
 
 ![image](https://github.com/golololologol/LLM_info_lookup/assets/50058139/77d114ff-40a3-460c-9515-1d3cce9da258)
 
+## Input Formatting
+
+- model_creator/model_name 
+- model_creator/model_name (branch)
+
+Or stick the whole URL in there if you’re lazy:
+- https://huggingface.co/model_creator/model_name (will default to main as branch)
+- https://huggingface.co/model_creator/model_name/tree/branch
+
 ## Contributions
 
 If you want to contribute to this mess, feel free. Just fork the repo, make your changes, and submit a pull request.
