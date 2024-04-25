@@ -71,29 +71,29 @@ def update_history_display():
 
     return "\n".join(entries)
 
-def get_vocab_info(request, branch="main"):
+def get_vocab_info(request, branch="main", show_special_tokens=False, use_local_cache=True):
     if not request.strip():
         return None, None, None
 
-    if request in model_history:
-        vocab_info = model_history[request]
-        model_name = request.split(' ')[0]
-        branch = request.split(' ')[1][1:-1]
-        return vocab_info, model_name, branch
-    
     parts = request.split('/')
-    model_name = '/'.join(parts[-2:])  # model_creator/model_name
-
     if 'tree' in parts:
-        branch = parts[parts.index('tree') + 1]
-        model_name = '/'.join(parts[-4:-2])
+        branch_index = parts.index('tree') + 1
+        branch = parts[branch_index]
+        model_name = '/'.join(parts[-4:-2])  # model_creator/model_name
+    else:
+        model_name = '/'.join(parts[-2:])  # model_creator/model_name
+        if '(' in model_name:
+            # Splitting out branch from model name if formatted like 'model_name (branch)'
+            model_name, branch_part = model_name.split(' (')
+            branch = branch_part[:-1]  # Strip the closing parenthesis
 
     model_key = f"{model_name} ({branch})"
 
-    if model_key in model_history:
+    # Check the cache with the formatted key
+    if model_key in model_history and use_local_cache:
         vocab_info = model_history[model_key]
         return vocab_info, model_name, branch
-    
+
     try:
         try:
             tokenizer = AutoTokenizer.from_pretrained(model_name, revision=branch, trust_remote_code=True, use_fast=True)
@@ -121,7 +121,8 @@ def get_vocab_info(request, branch="main"):
             "full_vocab_size": tokenizer.vocab_size + tokenizer.added_tokens_encoder.keys().__len__(),
             "default_prompt_format": tokenizer.chat_template == None,
             "prompt_format": tokenizer.apply_chat_template(test_input, tokenize=False, add_generation_prompt=True),
-            "tokenizer_class": tokenizer.__class__.__name__ if hasattr(tokenizer, "__class__") else "Unknown"
+            "tokenizer_class": tokenizer.__class__.__name__ if hasattr(tokenizer, "__class__") else "Unknown",
+            "all_special_tokens": tokenizer.added_tokens_encoder if show_special_tokens else {}
         }
 
         model_history[model_key] = vocab_info
@@ -131,12 +132,12 @@ def get_vocab_info(request, branch="main"):
     
     return vocab_info, model_name, branch
 
-def find_model_info(model_input):
+def find_model_info(model_input, show_special_tokens, use_local_cache):
     requests = model_input.split("\n")
     results = []
     for request in requests:
         
-        vocab_info, model_name, branch = get_vocab_info(request)
+        vocab_info, model_name, branch = get_vocab_info(request, show_special_tokens=show_special_tokens, use_local_cache=use_local_cache)
 
         if vocab_info is None:
             continue
@@ -161,6 +162,14 @@ def find_model_info(model_input):
             result_str += f"\n\n(Likely incorrect) Prompt Format:\n{prompt_format if prompt_format else 'Unknown'}"
         else:
             result_str += f"\n\nPrompt Format:\n{prompt_format if prompt_format else 'Unknown'}"
+
+        if show_special_tokens:
+            if vocab_info.get('all_special_tokens', {}) == {}:
+                result_str += f"\n\nNo Special Tokens Could Be Fetched"
+            else:
+                result_str += f"\n\nAll Special Tokens:"
+                for token, id in vocab_info['all_special_tokens'].items():
+                    result_str += f"\n{token} id: {id}"
         
         results.append(result_str)
 
@@ -168,16 +177,21 @@ def find_model_info(model_input):
     return ('\n' + '-' * 130 + '\n').join(results), history_display
 
 with gr.Blocks() as demo:
-    with gr.Row(variant="panel"):
-        model_input = gr.Textbox(label="Model Name", show_label=True, placeholder="author/model_name", info="Accepts author/model, and full URLs to model repos, e.g. huggingface.co/author/model")
-        submit_button = gr.Button(value="Retrieve Model Info", scale=0.955)
+    with gr.Row():
+        with gr.Column(scale=5):
+            model_input = gr.Textbox(label="Model Name", show_label=False, placeholder="author/model_name", info="Accepts author/model, and full URLs to model repos, e.g. huggingface.co/author/model")
+            with gr.Row():
+                show_special_tokens_toggle = gr.Checkbox(label="Show all special tokens", value=False, interactive=True)
+                use_local_cache = gr.Checkbox(label="Use local cache", value=True, interactive=True)
+
+        submit_button = gr.Button(value="Retrieve Model Info", scale=4)
     with gr.Row():
         model_info_output = gr.Textbox(label="Model Information", interactive=False)
         model_history_output = gr.Textbox(label="Model History", interactive=False, value=update_history_display())
 
     submit_button.click(
         fn=find_model_info, 
-        inputs=model_input, 
+        inputs=[model_input, show_special_tokens_toggle, use_local_cache], 
         outputs=[model_info_output, model_history_output]
     )
 
