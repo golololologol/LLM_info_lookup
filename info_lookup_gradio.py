@@ -16,13 +16,14 @@ def try_load_tokenizer(model_path: str) -> AutoTokenizer:
         tokenizer = AutoTokenizer.from_pretrained(model_path, legacy=False)
     except:
         raise ValueError(f"Tokenizer for {model_path} could not be loaded")
-    
     return tokenizer
 
 def get_tokenizer_sha(tokenizer = None, model_path="") -> str:
     tokenizer = try_load_tokenizer(model_path) if tokenizer == None else tokenizer
 
-    base_tokens = sorted(tokenizer._tokenizer.get_vocab(with_added_tokens=False).keys())
+    all_tokens = tokenizer.get_vocab().keys()
+    added_tokens = tokenizer.get_added_vocab().keys()
+    base_tokens = sorted(set(all_tokens) - set(added_tokens))
     tokenizer_sha = hashlib.sha256("".join(base_tokens).encode()).hexdigest()
     return tokenizer_sha
 
@@ -32,20 +33,21 @@ def get_vocab_family(tokenizer=None, model_path="") -> str:
     tokenizer_sha = get_tokenizer_sha(tokenizer)
 
     sha_to_family = {
-        "943d2a9918de54ad09e974a6d834ba44191fa98210c1414a822338fcf3f54038": "mistral",
-        "d1e4f1ef2bea057b346dd69244790543bec0dca751118e523d62ee6ae30b6036": "llama_1|2",
+        "154a07d332d0466ce54d5e83190930dc872c95777c493653c48d6b6b01891377": "mistral",
+        "88dfafd1e6cd6fc3cf71600f1c8590ec6b457263267d801636320000a6f687e3": "llama_1|2",
         "7f1739ca602e925d6c93e42c0d4d4f6f607169f5b016d5d322e4ec42a1c7c563": "llama_3",
-        "55b3930bf06e1139760a921273642322f38c2165620b34f1e6d521a7bc431c90": "command-r",
-        "24c4ea5aecffe896ab422b984ec1e4598d5aa565417432271ae752594a71e94e": "dbrx",
-        "99fe18abd82f35c8ef2a82b1277059dbe16d0a033fecdfa7726a3a6f574a3866": "gpt2",
-        "5520ff09e574cbb231f2baf283bd1a2e358b5d747c1a6aaa6402ee03991a409d": "qwen2",
-        "21d0e3b8f0c9f89b7b6f9a4c5b72b6ba2f70e7805460ca4cbd4b9c55d29f31fc": "gptneox",
-        "20c2a98cfdd0ae39798458b5a6dc4838d1b700a0ec074525654a57bfa3088648": "gemma",
-        "4088308e46cd5596c6c320bd102e48ee33b03d42d12447ccce8beafe4310bfa3": "yi",
+        "748d7e81288e3b759c4458794fee17f546a07e08e70832d2f04486cd1fc76121": "command-r",
+        "12c2a843415f76681408ba2645bb7ea68fc00e864afbfa408193159f847fbe4b": "dbrx",
+        "f41d538d54aa627ad2d1a7d853759ac104b94775a5de51e6e6e6e112fb32c1de": "gpt2",
+        "e59f183b9781a484efd580deda830bd952f7d3694c4648d41d295284a48f2945": "codeqwen",
+        "5520ff09e574cbb231f2baf283bd1a2e358b5d747c1a6aaa6402ee03991a409d": "qwen_1.5",
+        "347b0481e0536ab58d630b461c8bbb9dceb8b1a3ff6b9250c73bcd423e64fa71": "gptneox",
+        "9eb38d83274ea4aac4d1a037331c7b9f51ee5a74bc2ff9d85f3c1b7a944f2fd0": "gemma",
+        "f6556674148d92703237bab474c2cf220255926e7b6811e526b072d0ed086beb": "yi",
         "2e7d13c6f9a9825b1dfeb645fe3130b118e4c119bdf0460be06bd7e2d7660728": "deepseek",
         "62947c306f3a11187ba2a4a6ea25de91ce30c5724e6b647a1d6f0f8868217ead": "deepseek_1.5",
-        "0d35d803249ab1f34c99f8a10a562fc433134cca4fbd566dcd6ca61c4a857b04": "T5",
-        "f81fea9f3f8d28aa8c7d5b34ebcd4f4e8c583b471d170336a1b26f6c30ad292a": "codellama"
+        "94c18f1464d6aeb4542dff2fb8dc837e131e39853d86707eea683470c7344480": "T5",
+        "cabd41803ba4aa362c59603aa9fedd80d8eab202708beccce9f4e1e0b58eaf3f": "codellama"
     }
 
     vocab_family = sha_to_family.get(tokenizer_sha, "Unknown") # type: ignore
@@ -73,8 +75,11 @@ def update_history_display():
     return "\n".join(entries)
 
 def get_vocab_info(request, branch="main", use_local_cache=True):
-    if not request.strip():
+    if not request:
         return None, None, None
+    
+    if "?not-for-all-audiences" in request:
+        request = request.split("?not-for-all-audiences")[0]
 
     parts = request.split('/')
     if 'tree' in parts:
@@ -139,7 +144,7 @@ def find_model_info(model_input, show_special_tokens, use_local_cache):
     results = []
     for request in requests:
         
-        vocab_info, model_name, branch = get_vocab_info(request, use_local_cache=use_local_cache)
+        vocab_info, model_name, branch = get_vocab_info(request.strip(), use_local_cache=use_local_cache)
 
         if vocab_info is None:
             continue
