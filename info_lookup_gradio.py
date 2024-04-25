@@ -8,7 +8,7 @@ model_history = {}
 try:
     with open("model_history.json", "r") as file:
         model_history = json.load(file)
-except FileNotFoundError:
+except:
     pass
 
 def try_load_tokenizer(model_path: str) -> AutoTokenizer:
@@ -44,7 +44,8 @@ def get_vocab_family(tokenizer=None, model_path="") -> str:
         "4088308e46cd5596c6c320bd102e48ee33b03d42d12447ccce8beafe4310bfa3": "yi",
         "2e7d13c6f9a9825b1dfeb645fe3130b118e4c119bdf0460be06bd7e2d7660728": "deepseek",
         "62947c306f3a11187ba2a4a6ea25de91ce30c5724e6b647a1d6f0f8868217ead": "deepseek_1.5",
-        "0d35d803249ab1f34c99f8a10a562fc433134cca4fbd566dcd6ca61c4a857b04": "T5"
+        "0d35d803249ab1f34c99f8a10a562fc433134cca4fbd566dcd6ca61c4a857b04": "T5",
+        "f81fea9f3f8d28aa8c7d5b34ebcd4f4e8c583b471d170336a1b26f6c30ad292a": "codellama"
     }
 
     vocab_family = sha_to_family.get(tokenizer_sha, "Unknown") # type: ignore
@@ -159,6 +160,7 @@ def find_model_info(model_input, show_special_tokens, use_local_cache):
         result_str += f"\nUNK: {vocab_info['unk']} id: {vocab_info['unk_id']}"
         result_str += f"\nBase Vocab Size: {vocab_info['vocab_size']}, Full Vocab Size: {vocab_info['full_vocab_size']}"
         prompt_format = vocab_info.get('prompt_format', None)
+
         if vocab_info['default_prompt_format']:
             result_str += f"\n\n(Likely incorrect) Prompt Format:\n{prompt_format if prompt_format else 'Unknown'}"
         else:
