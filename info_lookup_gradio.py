@@ -44,7 +44,8 @@ def get_vocab_family(tokenizer=None, model_path="") -> str:
         "347b0481e0536ab58d630b461c8bbb9dceb8b1a3ff6b9250c73bcd423e64fa71": "gptneox",
         "9eb38d83274ea4aac4d1a037331c7b9f51ee5a74bc2ff9d85f3c1b7a944f2fd0": "gemma",
 
-        "b6f82ad160f599b1dd5bec8987acb5a316423d04de3123fa1eb0c8f1ba7f5568": "gemma", # This is stupid, yes, but that's because the base gemma's tokenizer is fucked,
+        "b6f82ad160f599b1dd5bec8987acb5a316423d04de3123fa1eb0c8f1ba7f5568": "gemma", # This is stupid, yes, but that's because this:
+                                                                                     # https://huggingface.co/alpindale/gemma-7b gemma's tokenizer is fucked,
                                                                                      # and it doesn't treat "<start_of_turn>" and "<end_of_turn>" as special tokens,
                                                                                      # so they end up in the base vocab, and i can't do anything about it 
                                                                                      
