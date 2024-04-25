@@ -43,6 +43,11 @@ def get_vocab_family(tokenizer=None, model_path="") -> str:
         "5520ff09e574cbb231f2baf283bd1a2e358b5d747c1a6aaa6402ee03991a409d": "qwen_1.5",
         "347b0481e0536ab58d630b461c8bbb9dceb8b1a3ff6b9250c73bcd423e64fa71": "gptneox",
         "9eb38d83274ea4aac4d1a037331c7b9f51ee5a74bc2ff9d85f3c1b7a944f2fd0": "gemma",
+
+        "b6f82ad160f599b1dd5bec8987acb5a316423d04de3123fa1eb0c8f1ba7f5568": "gemma", # This is stupid, yes, but that's because the base gemma's tokenizer is fucked,
+                                                                                     # and it doesn't treat "<start_of_turn>" and "<end_of_turn>" as special tokens,
+                                                                                     # so they end up in the base vocab, and i can't do anything about it 
+                                                                                     
         "f6556674148d92703237bab474c2cf220255926e7b6811e526b072d0ed086beb": "yi",
         "2e7d13c6f9a9825b1dfeb645fe3130b118e4c119bdf0460be06bd7e2d7660728": "deepseek",
         "62947c306f3a11187ba2a4a6ea25de91ce30c5724e6b647a1d6f0f8868217ead": "deepseek_1.5",
