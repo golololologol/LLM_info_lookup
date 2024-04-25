@@ -72,7 +72,7 @@ def update_history_display():
 
     return "\n".join(entries)
 
-def get_vocab_info(request, branch="main", show_special_tokens=False, use_local_cache=True):
+def get_vocab_info(request, branch="main", use_local_cache=True):
     if not request.strip():
         return None, None, None
 
@@ -139,7 +139,7 @@ def find_model_info(model_input, show_special_tokens, use_local_cache):
     results = []
     for request in requests:
         
-        vocab_info, model_name, branch = get_vocab_info(request, show_special_tokens=show_special_tokens, use_local_cache=use_local_cache)
+        vocab_info, model_name, branch = get_vocab_info(request, use_local_cache=use_local_cache)
 
         if vocab_info is None:
             continue
