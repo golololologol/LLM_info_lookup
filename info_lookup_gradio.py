@@ -122,7 +122,7 @@ def get_vocab_info(request, branch="main", show_special_tokens=False, use_local_
             "default_prompt_format": tokenizer.chat_template == None,
             "prompt_format": tokenizer.apply_chat_template(test_input, tokenize=False, add_generation_prompt=True),
             "tokenizer_class": tokenizer.__class__.__name__ if hasattr(tokenizer, "__class__") else "Unknown",
-            "all_special_tokens": tokenizer.added_tokens_encoder if show_special_tokens else {}
+            "all_special_tokens": tokenizer.added_tokens_encoder
         }
 
         model_history[model_key] = vocab_info
