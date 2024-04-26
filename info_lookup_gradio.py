@@ -1,6 +1,6 @@
 import gradio as gr
 import json
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, AutoConfig
 import hashlib
 
 model_history = {}
@@ -53,7 +53,8 @@ def get_vocab_family(tokenizer=None, model_path="") -> str:
         "2e7d13c6f9a9825b1dfeb645fe3130b118e4c119bdf0460be06bd7e2d7660728": "deepseek",
         "62947c306f3a11187ba2a4a6ea25de91ce30c5724e6b647a1d6f0f8868217ead": "deepseek_1.5",
         "94c18f1464d6aeb4542dff2fb8dc837e131e39853d86707eea683470c7344480": "T5",
-        "cabd41803ba4aa362c59603aa9fedd80d8eab202708beccce9f4e1e0b58eaf3f": "codellama"
+        "cabd41803ba4aa362c59603aa9fedd80d8eab202708beccce9f4e1e0b58eaf3f": "codellama",
+        "c2ed819dc3c535a3a64a10d492a39baa87b9cc7aa0a2c72adecc1b31e3e1b544": "jamba"
     }
 
     vocab_family = sha_to_family.get(tokenizer_sha, "Unknown") # type: ignore
@@ -79,6 +80,34 @@ def update_history_display():
             entries.append(f"{key}: {vocab_family}")
 
     return "\n".join(entries)
+
+def collect_info(tokenizer, config):
+    test_input = [
+        {"role": "user", "content": "{UserContent}"},
+        {"role": "assistant", "content": "{AIContent}"}
+    ]
+
+    vocab_family = get_vocab_family(tokenizer)
+    vocab_info = {
+        "vocab_family": vocab_family,
+        "tokenizer_sha": get_tokenizer_sha(tokenizer),
+        "bos": tokenizer.bos_token, 
+        "eos": tokenizer.eos_token,
+        "pad": tokenizer.pad_token, 
+        "unk": tokenizer.unk_token,
+        "bos_id": tokenizer.bos_token_id, 
+        "eos_id": tokenizer.eos_token_id,
+        "pad_id": tokenizer.pad_token_id, 
+        "unk_id": tokenizer.unk_token_id,
+        "vocab_size": tokenizer.vocab_size,
+        "full_vocab_size": tokenizer.vocab_size + tokenizer.added_tokens_encoder.keys().__len__(),
+        "default_prompt_format": tokenizer.chat_template == None,
+        "prompt_format": tokenizer.apply_chat_template(test_input, tokenize=False, add_generation_prompt=True),
+        "tokenizer_class": tokenizer.__class__.__name__ if hasattr(tokenizer, "__class__") else "Unknown",
+        "max_position_embeddings": getattr(config, "max_position_embeddings", "Unknown"),
+        "all_special_tokens": tokenizer.added_tokens_encoder
+    }
+    return vocab_info
 
 def get_vocab_info(request, branch="main", use_local_cache=True):
     if not request:
@@ -107,35 +136,13 @@ def get_vocab_info(request, branch="main", use_local_cache=True):
         return vocab_info, model_name, branch
 
     try:
-        try:
+        config = AutoConfig.from_pretrained(model_name, revision=branch, trust_remote_code=True)
+        try: 
             tokenizer = AutoTokenizer.from_pretrained(model_name, revision=branch, trust_remote_code=True, use_fast=True)
+            vocab_info = collect_info(tokenizer, config)
         except:
             tokenizer = AutoTokenizer.from_pretrained(model_name, revision=branch, trust_remote_code=True, use_fast=False)
-
-        test_input = [
-            {"role": "user", "content": "{UserContent}"},
-            {"role": "assistant", "content": "{AIContent}"}
-        ]
-
-        vocab_family = get_vocab_family(tokenizer)
-        vocab_info = {
-            "vocab_family": vocab_family,
-            "tokenizer_sha": get_tokenizer_sha(tokenizer),
-            "bos": tokenizer.bos_token, 
-            "eos": tokenizer.eos_token,
-            "pad": tokenizer.pad_token, 
-            "unk": tokenizer.unk_token,
-            "bos_id": tokenizer.bos_token_id, 
-            "eos_id": tokenizer.eos_token_id,
-            "pad_id": tokenizer.pad_token_id, 
-            "unk_id": tokenizer.unk_token_id,
-            "vocab_size": tokenizer.vocab_size,
-            "full_vocab_size": tokenizer.vocab_size + tokenizer.added_tokens_encoder.keys().__len__(),
-            "default_prompt_format": tokenizer.chat_template == None,
-            "prompt_format": tokenizer.apply_chat_template(test_input, tokenize=False, add_generation_prompt=True),
-            "tokenizer_class": tokenizer.__class__.__name__ if hasattr(tokenizer, "__class__") else "Unknown",
-            "all_special_tokens": tokenizer.added_tokens_encoder
-        }
+            vocab_info = collect_info(tokenizer, config)
 
         model_history[model_key] = vocab_info
         if use_local_cache:
@@ -170,6 +177,7 @@ def find_model_info(model_input, show_special_tokens, use_local_cache):
         result_str += f"\nPAD: {vocab_info['pad']} id: {vocab_info['pad_id']}"
         result_str += f"\nUNK: {vocab_info['unk']} id: {vocab_info['unk_id']}"
         result_str += f"\nBase Vocab Size: {vocab_info['vocab_size']}, Full Vocab Size: {vocab_info['full_vocab_size']}"
+        result_str += f"\nMax Context Size: {vocab_info['max_position_embeddings']}"
         prompt_format = vocab_info.get('prompt_format', None)
 
         if vocab_info['default_prompt_format']:
