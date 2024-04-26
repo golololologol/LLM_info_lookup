@@ -11,7 +11,7 @@ A straightforward Gradio interface to retrieve key information about PyTorch LLM
 
 ## Installation
 
-1. Clone this repository.
+1. Clone this repository `git clone https://github.com/golololologol/LLM_info_lookup`.
 2. Run `launch.bat` or `launch.sh` depending on your OS.
 3. Now you're all set to use it.
 
