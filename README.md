@@ -4,7 +4,7 @@ A straightforward Gradio interface to retrieve key information about PyTorch LLM
 
 ## Features
 
-- Retrieves and displays model vocab information including special tokens.
+- Retrieves and displays model vocab information including special tokens, and max context size from the model config.
 - Shows vocabulary family for a range of known tokenizer SHA signatures.
 - Provides functionality to use local cache for faster access.
 - Customizable model retrieval using branches.
@@ -24,7 +24,7 @@ A straightforward Gradio interface to retrieve key information about PyTorch LLM
 
 ## UI
 
-![image](https://github.com/golololologol/LLM_info_lookup/assets/50058139/77d114ff-40a3-460c-9515-1d3cce9da258)
+![image](https://github.com/golololologol/LLM_info_lookup/assets/50058139/27341db9-80a1-4225-9504-62983609ed8b)
 
 ## Input Formatting
 
