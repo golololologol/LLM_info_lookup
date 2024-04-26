@@ -9,7 +9,7 @@ IF NOT EXIST "%VENV_DIR%" (
     python -m venv %VENV_DIR%
     IF ERRORLEVEL 1 (
         echo Could not create virtual environment. Make sure Python is installed correctly.
-	echo Recommended version of Python: 3.10.11
+	    echo Recommended version of Python: 3.10.11
         goto :error
     )
 )
@@ -21,19 +21,23 @@ IF ERRORLEVEL 1 (
     goto :error
 )
 
-echo Checking if you already got what you need...
-pip freeze > venv\current_requirements.txt
-fc %REQUIREMENTS% venv\current_requirements.txt > venv\difference.txt
-IF ERRORLEVEL 1 (
-    echo Installing the damn dependencies from requirements.txt...
-    pip install -r %REQUIREMENTS%
+echo Checking each damn dependency manually...
+FOR /F "delims=" %%i IN (%REQUIREMENTS%) DO (
+    pip show %%i >nul 2>&1
     IF ERRORLEVEL 1 (
-        echo Something's fucked up with pip. Are you sure it's installed?
-        goto :error
+        echo Missing %%i, installing now...
+        pip install %%i
+        IF ERRORLEVEL 1 (
+            echo Failed to install %%i. Your setup is probably cursed. Throw your PC out of the window.
+	    echo Or deleting the venv folder might also suffice.
+            goto :error
+        )
+    ) ELSE (
+        echo %%i is already installed...
     )
-) ELSE (
-    echo All dependencies are already installed, lucky you.
 )
+
+echo All dependencies are installed and verified. Aren't you lucky?
 
 echo Running the script...
 python info_lookup_gradio.py
