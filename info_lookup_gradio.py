@@ -240,7 +240,8 @@ def find_model_info(raw_input, show_special_tokens, use_local_cache):
     return ('\n' + '-' * 130 + '\n').join(tokenizer_results), ('\n' + '-' * 130 + '\n').join(config_results), history_display
 
 def change_visibility(toggle, text):
-    return gr.TextArea(visible=toggle, lines=len(text.split("\n")) - 1)
+    num_lines = len(text.split("\n")) - 1
+    return gr.TextArea(visible=toggle, lines=num_lines if num_lines > 0 else 7)
 
 with gr.Blocks() as demo:
     with gr.Row():
