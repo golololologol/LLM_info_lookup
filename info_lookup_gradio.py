@@ -4,12 +4,20 @@ from transformers import AutoTokenizer, AutoConfig
 import hashlib
 
 model_history = {}
+model_history_path = "model_history.json"
 
 try:
-    with open("model_history.json", "r") as file:
+    with open(model_history_path, "r") as file:
         model_history = json.load(file)
 except:
     pass
+
+def clear_history():
+    global model_history
+    model_history.clear()
+    save_history()
+    history_display = update_history_display()
+    return history_display
 
 def try_load_tokenizer(model_path: str) -> AutoTokenizer:
     try:
@@ -61,10 +69,12 @@ def get_vocab_family(tokenizer=None, model_path="") -> str:
     return vocab_family
 
 def save_history():
+    global model_history
     with open("model_history.json", "w") as file:
         json.dump(model_history, file, indent=4)
 
 def update_history_display():
+    global model_history
     entries = []
     for key, value in model_history.items():
         if "error" in value:
@@ -104,8 +114,17 @@ def collect_info(tokenizer, config):
         "default_prompt_format": tokenizer.chat_template == None,
         "prompt_format": tokenizer.apply_chat_template(test_input, tokenize=False, add_generation_prompt=True),
         "tokenizer_class": tokenizer.__class__.__name__ if hasattr(tokenizer, "__class__") else "Unknown",
+        "all_special_tokens": tokenizer.added_tokens_encoder,
+        "architecture": ", ".join(getattr(config, "architectures", ["Unknown"])),
+        "activation_function": getattr(config, "hidden_act", "Unknown"),
+        "num_layers": getattr(config, "num_hidden_layers", "Unknown"),
+        "num_heads": getattr(config, "num_attention_heads", "Unknown"),
+        "hidden_size": getattr(config, "hidden_size", "Unknown"),
+        "intermediate_size": getattr(config, "intermediate_size", "Unknown"),
+        "num_kv_heads": getattr(config, "num_key_value_heads", "Unknown"),
         "max_position_embeddings": getattr(config, "max_position_embeddings", "Unknown"),
-        "all_special_tokens": tokenizer.added_tokens_encoder
+        "torch_dtype": getattr(config, "torch_dtype", "Unknown"),
+        "model_type": getattr(config, "model_type", "Unknown")
     }
     return vocab_info
 
@@ -122,11 +141,14 @@ def get_vocab_info(request, branch="main", use_local_cache=True):
         branch = parts[branch_index]
         model_name = '/'.join(parts[-4:-2])  # model_creator/model_name
     else:
-        model_name = '/'.join(parts[-2:])  # model_creator/model_name
+        model_name = '/'.join(parts[-2:])  # model_creator/model_name and maybe (branch) and also maybe : vocab_family
         if '(' in model_name:
             # Splitting out branch from model name if formatted like 'model_name (branch)'
             model_name, branch_part = model_name.split(' (')
-            branch = branch_part[:-1]  # Strip the closing parenthesis
+            if "): " in branch_part:
+                branch = branch_part.split("): ")[0]
+            else:
+                branch = branch_part[:-1]  # Strip the closing parenthesis
 
     model_key = f"{model_name} ({branch})"
 
@@ -152,9 +174,11 @@ def get_vocab_info(request, branch="main", use_local_cache=True):
     
     return vocab_info, model_name, branch
 
-def find_model_info(model_input, show_special_tokens, use_local_cache):
-    requests = model_input.split("\n")
-    results = []
+def find_model_info(raw_input, show_special_tokens, use_local_cache):
+    requests = raw_input.split("\n")
+    tokenizer_results = []
+    config_results = []
+
     for request in requests:
         
         vocab_info, model_name, branch = get_vocab_info(request.strip(), use_local_cache=use_local_cache)
@@ -162,59 +186,95 @@ def find_model_info(model_input, show_special_tokens, use_local_cache):
         if vocab_info is None:
             continue
 
-        result_str = f"{model_name} ({branch}): {vocab_info.get('vocab_family', 'Unknown')}"
+        tokenizer_str = f"{model_name} ({branch}): {vocab_info.get('vocab_family', 'Unknown')}"
 
         if "error" in vocab_info:
-            result_str += f', error: {vocab_info["error"]}'
-            results.append(result_str)
+            tokenizer_str += f', error: {vocab_info["error"]}'
+            tokenizer_results.append(tokenizer_str)
+            config_results.append(tokenizer_str)
             continue
-        elif vocab_info.get('vocab_family', 'Unknown') == "Unknown":
-            result_str += f'\nTokenizer SHA: {vocab_info["tokenizer_sha"]}'
-            result_str += f"\nLikely vocab family: {vocab_info['tokenizer_class']}"
 
-        result_str += f"\nBOS: {vocab_info['bos']} id: {vocab_info['bos_id']}"
-        result_str += f"\nEOS: {vocab_info['eos']} id: {vocab_info['eos_id']}"
-        result_str += f"\nPAD: {vocab_info['pad']} id: {vocab_info['pad_id']}"
-        result_str += f"\nUNK: {vocab_info['unk']} id: {vocab_info['unk_id']}"
-        result_str += f"\nBase Vocab Size: {vocab_info['vocab_size']}, Full Vocab Size: {vocab_info['full_vocab_size']}"
-        result_str += f"\nMax Context Size: {vocab_info['max_position_embeddings']}"
+        # Tokenizer info
+        if vocab_info.get('vocab_family', 'Unknown') == "Unknown":
+            tokenizer_str += f'\nTokenizer SHA: {vocab_info["tokenizer_sha"]}'
+            tokenizer_str += f"\nLikely vocab family: {vocab_info['tokenizer_class']}"
+
+        tokenizer_str += f"\nBOS: {vocab_info['bos']} id: {vocab_info['bos_id']}"
+        tokenizer_str += f"\nEOS: {vocab_info['eos']} id: {vocab_info['eos_id']}"
+        tokenizer_str += f"\nPAD: {vocab_info['pad']} id: {vocab_info['pad_id']}"
+        tokenizer_str += f"\nUNK: {vocab_info['unk']} id: {vocab_info['unk_id']}"
+        tokenizer_str += f"\nBase Vocab Size: {vocab_info['vocab_size']}, Full Vocab Size: {vocab_info['full_vocab_size']}"
         prompt_format = vocab_info.get('prompt_format', None)
 
         if vocab_info['default_prompt_format']:
-            result_str += f"\n\n(Likely incorrect) Prompt Format:\n{prompt_format if prompt_format else 'Unknown'}"
+            tokenizer_str += f"\n\n(Likely incorrect) Prompt Format:\n{prompt_format if prompt_format else 'Unknown'}"
         else:
-            result_str += f"\n\nPrompt Format:\n{prompt_format if prompt_format else 'Unknown'}"
+            tokenizer_str += f"\n\nPrompt Format:\n{prompt_format if prompt_format else 'Unknown'}"
 
         if show_special_tokens:
             if vocab_info.get('all_special_tokens', {}) == {}:
-                result_str += f"\n\nNo Special Tokens Could Be Fetched"
+                tokenizer_str += f"\n\nNo Special Tokens Could Be Fetched"
             else:
-                result_str += f"\n\nAll Special Tokens:"
+                tokenizer_str += f"\n\nAll Special Tokens:"
                 for token, id in vocab_info['all_special_tokens'].items():
-                    result_str += f"\n{token} id: {id}"
+                    tokenizer_str += f"\n{token} id: {id}"
         
-        results.append(result_str)
+        tokenizer_results.append(tokenizer_str)
+
+        # Config info
+        config_str = f"{model_name} ({branch})"
+        config_str += f"\nModel Type: {vocab_info['model_type']}"
+        config_str += f"\nMax Context Size: {vocab_info['max_position_embeddings']}"
+        config_str += f"\nArchitecture: {vocab_info['architecture']}"
+        config_str += f"\nActivation Function: {vocab_info['activation_function']}"
+        config_str += f"\nNumber of Layers: {vocab_info['num_layers']}"
+        config_str += f"\nNumber of Attn Heads: {vocab_info['num_heads']}"
+        config_str += f"\nNumber of KV Heads: {vocab_info['num_kv_heads']}"
+        config_str += f"\nHidden Size: {vocab_info['hidden_size']}"
+        config_str += f"\nIntermediate Size: {vocab_info['intermediate_size']}"
+        config_str += f"\nTorch dtype: {vocab_info['torch_dtype']}"
+
+        config_results.append(config_str)
 
     history_display = update_history_display()
-    return ('\n' + '-' * 130 + '\n').join(results), history_display
+    return ('\n' + '-' * 130 + '\n').join(tokenizer_results), ('\n' + '-' * 130 + '\n').join(config_results), history_display
+
+def change_visibility(toggle, text):
+    return gr.TextArea(visible=toggle, lines=len(text.split("\n")) - 1)
 
 with gr.Blocks() as demo:
     with gr.Row():
-        with gr.Column(scale=5):
+        with gr.Column(scale=40):
             model_input = gr.Textbox(label="Model Name", show_label=False, placeholder="author/model_name", info="Accepts author/model, and full URLs to model repos, e.g. huggingface.co/author/model")
             with gr.Row():
-                show_special_tokens_toggle = gr.Checkbox(label="Show all special tokens", value=False, interactive=True)
+                show_special_tokens = gr.Checkbox(label="Show all special tokens", value=False, interactive=True)
                 use_local_cache = gr.Checkbox(label="Use local cache", value=True, interactive=True)
+                show_model_config = gr.Checkbox(label="Show model config", value=True, interactive=True)
 
-        submit_button = gr.Button(value="Retrieve Model Info", scale=4)
+        submit_button = gr.Button(value="Retrieve Model Info", scale=18.5)
     with gr.Row():
-        model_info_output = gr.Textbox(label="Model Information", interactive=False)
-        model_history_output = gr.Textbox(label="Model History", interactive=False, value=update_history_display())
-
+        model_tokenizer_output = gr.TextArea(label="Tokenizer Information", interactive=False, autoscroll=False)
+        model_config_output = gr.TextArea(label="Config Information", interactive=False, autoscroll=False, visible=show_model_config)
+        with gr.Column():
+            model_history_output = gr.TextArea(label="Model History", interactive=False, value=update_history_display(), info="author/model_name (branch): vocab_family")
+            clear_history_button = gr.Button(value="Clear History", interactive=True)
+        
     submit_button.click(
         fn=find_model_info, 
-        inputs=[model_input, show_special_tokens_toggle, use_local_cache], 
-        outputs=[model_info_output, model_history_output]
+        inputs=[model_input, show_special_tokens, use_local_cache], 
+        outputs=[model_tokenizer_output, model_config_output, model_history_output]
+    )
+
+    clear_history_button.click(
+        fn=clear_history,
+        inputs=[],
+        outputs=[model_history_output]
+    )
+
+    show_model_config.change(
+        fn=change_visibility,
+        inputs=[show_model_config, model_config_output],
+        outputs=model_config_output
     )
 
 demo.launch(debug=True)
