@@ -1,5 +1,6 @@
 import gradio as gr
 import json
+import os
 from transformers import AutoTokenizer, AutoConfig
 import hashlib
 
@@ -15,7 +16,8 @@ except:
 def clear_history():
     global model_history
     model_history.clear()
-    save_history()
+    if os.path.exists(model_history_path):
+        save_history()
     history_display = update_history_display()
     return history_display
 
@@ -70,7 +72,7 @@ def get_vocab_family(tokenizer=None, model_path="") -> str:
 
 def save_history():
     global model_history
-    with open("model_history.json", "w") as file:
+    with open(model_history_path, "w") as file:
         json.dump(model_history, file, indent=4)
 
 def update_history_display():
