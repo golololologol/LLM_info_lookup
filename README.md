@@ -31,6 +31,7 @@ A straightforward Gradio interface to retrieve key information about PyTorch LLM
 
 - model_creator/model_name 
 - model_creator/model_name (branch)
+- model_creator/model_name (branch): vocab_family
 
 Or stick the whole URL in there if you’re lazy:
 - https://huggingface.co/model_creator/model_name
