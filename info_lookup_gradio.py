@@ -224,6 +224,16 @@ def find_model_info(raw_input, show_special_tokens, use_local_cache):
         tokenizer_results.append(tokenizer_str)
 
         # Config info
+        attn_impl = "Unknown"
+
+        if vocab_info['num_kv_heads'] and vocab_info['num_heads']:
+            if vocab_info['num_kv_heads'] == vocab_info['num_heads']:
+                attn_impl = "MHA (Multi-Head Attention)"
+            elif vocab_info['num_kv_heads'] == 1:
+                attn_impl = "MQA (Multi-Query Attention)"
+            else:
+                attn_impl = "GQA (Grouped Query Attention)"
+
         config_str = f"{model_name} ({branch})"
         config_str += f"\nModel Type: {vocab_info['model_type']}"
         config_str += f"\nMax Context Size: {vocab_info['max_position_embeddings']}"
@@ -232,6 +242,7 @@ def find_model_info(raw_input, show_special_tokens, use_local_cache):
         config_str += f"\nNumber of Layers: {vocab_info['num_layers']}"
         config_str += f"\nNumber of Attn Heads: {vocab_info['num_heads']}"
         config_str += f"\nNumber of KV Heads: {vocab_info['num_kv_heads']}"
+        config_str += f"\nAttention Implementation: {attn_impl}"
         config_str += f"\nHidden Size: {vocab_info['hidden_size']}"
         config_str += f"\nIntermediate Size: {vocab_info['intermediate_size']}"
         config_str += f"\nTorch dtype: {vocab_info['torch_dtype']}"
@@ -279,5 +290,6 @@ with gr.Blocks() as demo:
         inputs=[show_model_config, model_config_output],
         outputs=model_config_output
     )
+
 
 demo.launch(debug=True)
