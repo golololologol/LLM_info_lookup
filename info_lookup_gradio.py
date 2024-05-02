@@ -226,7 +226,7 @@ def find_model_info(raw_input, show_special_tokens, use_local_cache):
         # Config info
         attn_impl = "Unknown"
 
-        if vocab_info['num_kv_heads'] and vocab_info['num_heads']:
+        if isinstance(vocab_info['num_kv_heads'], int) and isinstance(vocab_info['num_heads'], int):
             if vocab_info['num_kv_heads'] == vocab_info['num_heads']:
                 attn_impl = "MHA (Multi-Head Attention)"
             elif vocab_info['num_kv_heads'] == 1:
