@@ -2,3 +2,4 @@ gradio
 transformers
 SentencePiece
 tiktoken
+protobuf
